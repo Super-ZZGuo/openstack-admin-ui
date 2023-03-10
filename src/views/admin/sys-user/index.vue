@@ -243,7 +243,7 @@
               </el-form-item>
             </el-col>
 
-            <el-col :span="12">
+            <!-- <el-col :span="12">
               <el-form-item label="岗位">
                 <el-select v-model="form.postId" placeholder="请选择" @change="$forceUpdate()">
                   <el-option
@@ -255,7 +255,7 @@
                   />
                 </el-select>
               </el-form-item>
-            </el-col>
+            </el-col> -->
             <el-col :span="12">
               <el-form-item label="角色">
                 <el-select v-model="form.roleId" placeholder="请选择" @change="$forceUpdate()">
@@ -319,7 +319,7 @@
 import { listUser, getUser, delUser, addUser, updateUser, exportUser, resetUserPwd, changeUserStatus, importTemplate } from '@/api/admin/sys-user'
 import { getToken } from '@/utils/auth'
 
-import { listPost } from '@/api/admin/sys-post'
+// import { listPost } from '@/api/admin/sys-post'
 import { listRole } from '@/api/admin/sys-role'
 import { treeselect } from '@/api/admin/sys-dept'
 
@@ -359,8 +359,8 @@ export default {
       statusOptions: [],
       // 性别状态字典
       sexOptions: [],
-      // 岗位选项
-      postOptions: [],
+      // // 岗位选项
+      // postOptions: [],
       // 角色选项
       roleOptions: [],
       // 表单参数
@@ -518,7 +518,7 @@ export default {
         sex: undefined,
         status: '2',
         remark: undefined,
-        postIds: undefined,
+        // postIds: undefined,
         roleIds: undefined
       }
       this.resetForm('form')
@@ -546,9 +546,9 @@ export default {
       this.reset()
       this.getTreeselect()
 
-      listPost({ pageSize: 1000 }).then(response => {
-        this.postOptions = response.data.list
-      })
+      // listPost({ pageSize: 1000 }).then(response => {
+      //   this.postOptions = response.data.list
+      // })
       listRole({ pageSize: 1000 }).then(response => {
         this.roleOptions = response.data.list
       })
@@ -567,9 +567,9 @@ export default {
         this.title = '修改用户'
         this.form.password = ''
       })
-      listPost({ pageSize: 1000 }).then(response => {
-        this.postOptions = response.data.list
-      })
+      // listPost({ pageSize: 1000 }).then(response => {
+      //   this.postOptions = response.data.list
+      // })
       listRole({ pageSize: 1000 }).then(response => {
         this.roleOptions = response.data.list
       })
