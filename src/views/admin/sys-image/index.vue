@@ -87,7 +87,7 @@
           @pagination="getList"
         />
 
-        <!-- 添加或修改部门对话框 -->
+        <!-- 添加或修改镜像对话框 -->
         <el-dialog :title="title" :visible.sync="open" width="800px" :close-on-click-modal="false">
           <el-form ref="form" :model="form" :rules="rules" label-width="150px">
             <el-row>
@@ -159,6 +159,7 @@ export default {
       typeOptions: [],
       sysImageList: [],
 
+      // 镜像类型选项
       sysImgOptions: [{
         value: 'ami',
         label: 'ami'
@@ -187,6 +188,13 @@ export default {
         value: 'iso',
         label: 'iso' }],
 
+      // 镜像更新特定结构体
+      sysImgStructUpdate: {
+        imageOldName: '',
+        imageNewName: '',
+        oldTag: '',
+        newTag: ''
+      },
       // 关系表类型
 
       // 查询参数
@@ -268,6 +276,8 @@ export default {
     handleUpdate(row) {
       this.reset()
       getSysImage(row.imageId).then(response => {
+        this.sysImgStructUpdate.imageOldName = row.imageName
+        this.sysImgStructUpdate.oldTag = row.tag
         this.form = response.data
         this.open = true
         this.title = '修改镜像'
@@ -279,7 +289,9 @@ export default {
       this.$refs['form'].validate(valid => {
         if (valid) {
           if (this.form.imageId !== undefined) {
-            updateSysImage(this.form).then(response => {
+            this.sysImgStructUpdate.imageNewName = this.form.imageName
+            this.sysImgStructUpdate.newTag = this.form.tag
+            updateSysImage(this.form.imageId, this.sysImgStructUpdate).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open = false

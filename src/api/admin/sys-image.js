@@ -27,9 +27,9 @@ export function addSysImage(data) {
 }
 
 // 修改SysImage
-export function updateSysImage(data) {
+export function updateSysImage(id, data) {
   return request({
-    url: '/api/v1/sys-image/' + data.imageId,
+    url: '/api/v1/sys-image/' + id,
     method: 'put',
     data: data
   })
