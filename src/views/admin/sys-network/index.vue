@@ -1,12 +1,11 @@
-
 <template>
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <el-form :inline="true">
-          <el-form-item label="名称" prop="imageName">
+        <el-form ref="queryForm" :model="queryParams" :inline="true">
+          <el-form-item label="名称" prop="networkName">
             <el-input
-              v-model="queryParams.roleName"
+              v-model="queryParams.networkName"
               placeholder="请输入靶场名称"
               clearable
               size="small"
@@ -90,32 +89,36 @@
               </el-col>
 
               <el-col :span="12">
-                <el-form-item label="CIDR" prop="cidr" :disabled="isEdit">
+                <el-form-item label="CIDR" prop="cidr">
                   <el-input
                     v-model="form.cidr"
+                    :disabled="isEdit"
                   />
                 </el-form-item>
               </el-col>
 
               <el-col :span="24">
-                <el-form-item label="靶场名称" prop="projectName" :disabled="isEdit">
+                <el-form-item label="靶场名称" prop="projectName">
                   <el-input
-                    v-model="form.porjectName"
+                    v-model="form.projectName"
+                    :disabled="isEdit"
                   />
                 </el-form-item>
               </el-col>
 
               <el-col :span="12">
-                <el-form-item label="可分配IP(起始)" prop="poolStart" :disabled="isEdit">
+                <el-form-item label="可分配IP(起始)" prop="poolStart">
                   <el-input
                     v-model="form.poolStart"
+                    :disabled="isEdit"
                   />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="可分配IP(结尾)" prop="poolEnd" :disabled="isEdit">
+                <el-form-item label="可分配IP(结尾)" prop="poolEnd">
                   <el-input
                     v-model="form.poolEnd"
+                    :disabled="isEdit"
                   />
                 </el-form-item>
               </el-col>
@@ -240,6 +243,7 @@ export default {
     resetQuery() {
       this.dateRange = []
       this.resetForm('queryForm')
+      console.log(this.queryParams)
       this.handleQuery()
     },
     /** 新增按钮操作 */
@@ -247,7 +251,7 @@ export default {
       this.reset()
       this.open = true
       this.title = '添加SysNetwork'
-      this.isEdit = true
+      this.isEdit = false
     },
     // 多选框选中数据
     handleSelectionChange(selection) {

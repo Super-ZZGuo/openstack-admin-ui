@@ -2,10 +2,10 @@
   <BasicLayout>
     <template #wrapper>
       <el-card class="box-card">
-        <el-form :inline="true">
+        <el-form ref="queryForm" :model="queryParams" :inline="true">
           <el-form-item label="名称" prop="imageName">
             <el-input
-              v-model="queryParams.roleName"
+              v-model="queryParams.imageName"
               placeholder="请输入镜像名称"
               clearable
               size="small"
@@ -13,7 +13,7 @@
             />
           </el-form-item>
           <el-form-item label="类型" prop="type">
-            <el-select v-model="queryParams.visible" placeholder="镜像类型" clearable size="small">
+            <el-select v-model="queryParams.type" placeholder="镜像类型" clearable size="small">
               <el-option
                 v-for="img in sysImgOptions"
                 :key="img.value"
@@ -99,7 +99,7 @@
 
               <el-col :span="24">
                 <el-form-item label="OpenStack Image ID" prop="openstackId">
-                  <el-input v-model="form.openstackId" controls-position="right" :disabled="isEdit" />
+                  <el-input v-model="form.openstackId" controls-position="right" :disabled="isEditO" />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
@@ -155,6 +155,7 @@ export default {
       // 是否显示弹出层
       open: false,
       isEdit: false,
+      isEditO: false,
       // 类型数据字典
       typeOptions: [],
       sysImageList: [],
@@ -264,7 +265,8 @@ export default {
       this.reset()
       this.open = true
       this.title = '添加SysImage'
-      this.isEdit = true
+      this.isEdit = false
+      this.isEditO = true
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
@@ -282,6 +284,7 @@ export default {
         this.open = true
         this.title = '修改镜像'
         this.isEdit = true
+        this.isEditO = true
       })
     },
     /** 提交按钮 */

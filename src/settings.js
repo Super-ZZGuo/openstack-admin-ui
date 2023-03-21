@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'OpenStack 后台管理系统',
+  title: '工业互联网靶场',
 
   /**
    * @type {boolean} true | false
@@ -10,7 +10,7 @@ module.exports = {
   /**
    * 是否显示顶部导航
    */
-  topNav: true,
+  topNav: false,
 
   /**
    * @type {boolean} true | false
