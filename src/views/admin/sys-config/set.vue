@@ -12,7 +12,17 @@
                   </el-form-item>
                   <el-form-item label="系统logo" prop="sys_app_logo" required>
                     <img v-if="form.sys_app_logo" :src="form.sys_app_logo" class="el-upload el-upload--picture-card" style="float:left">
-                    <el-upload ref="sys_app_logo" :headers="headers" :file-list="sys_app_logofileList" :action="sys_app_logoAction" style="float:left" :before-upload="sys_app_logoBeforeUpload" list-type="picture-card" :show-file-list="false" :on-success="uploadSuccess">
+                    <el-upload
+                      ref="sys_app_logo"
+                      :headers="headers"
+                      :file-list="sys_app_logofileList"
+                      :action="sys_app_logoAction"
+                      style="float:left"
+                      :before-upload="sys_app_logoBeforeUpload"
+                      list-type="picture-card"
+                      :show-file-list="false"
+                      :on-success="uploadSuccess"
+                    >
                       <i class="el-icon-plus" />
                     </el-upload>
                   </el-form-item>

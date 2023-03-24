@@ -9,7 +9,7 @@ export default {
   name: 'App'
 }
 </script>
-<script>
+<!-- <script>
 // 声明: 百度统计统计相关下载使用量无别的用途
 // 可自行删除
 var _hmt = _hmt || [];
@@ -19,5 +19,5 @@ var _hmt = _hmt || [];
   var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
-</script>
+</script> -->
 
