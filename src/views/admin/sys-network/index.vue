@@ -3,10 +3,19 @@
     <template #wrapper>
       <el-card class="box-card">
         <el-form ref="queryForm" :model="queryParams" :inline="true">
-          <el-form-item label="名称" prop="networkName">
+          <el-form-item label="靶场名称" prop="projectName">
+            <el-input
+              v-model="queryParams.projectName"
+              placeholder="请输入靶场名称"
+              clearable
+              size="small"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="网络名称" prop="networkName">
             <el-input
               v-model="queryParams.networkName"
-              placeholder="请输入靶场名称"
+              placeholder="请输入网络名称"
               clearable
               size="small"
               @keyup.enter.native="handleQuery"
@@ -19,7 +28,7 @@
         </el-form>
 
         <el-row :gutter="10" class="mb8">
-          <el-col :span="24">
+          <el-col :span="1.5">
             <el-button
               v-permisaction="['admin:sysNetwork:add']"
               type="primary"
@@ -34,22 +43,22 @@
         <el-table
           v-loading="loading"
           :data="sysNetworkList"
-          default-expand-all
           border
-          @selection-change="handleSelectionChange"
+          row-key="projectName"
+          :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
         >
-          <el-table-column type="selection" width="55" align="center" />
-          <el-table-column label="网络ID" sortable="custom" prop="networkId" width="100" />
+          <el-table-column width="55" align="center" />
+          <el-table-column label="靶场名称" sortable="custom" prop="projectName" width="100" :show-overflow-tooltip="true" />
+          <!-- <el-table-column label="网络ID" sortable="custom" prop="networkId" width="100" /> -->
           <el-table-column label="网络名称" sortable="custom" prop="networkName" width="100" :show-overflow-tooltip="true" />
-          <el-table-column label="CIDR" sortable="custom" prop="cidr" width="150" :show-overflow-tooltip="true" />
-          <el-table-column label="靶场名称" sortable="custom" prop="projectName" :show-overflow-tooltip="true" />
-          <el-table-column label="可分配IP(起始)" sortable="custom" prop="poolStart" width="150" :show-overflow-tooltip="true" />
-          <el-table-column label="可分配IP(结尾)" sortable="custom" prop="poolEnd" width="150" :show-overflow-tooltip="true" />
-          <el-table-column label="标签" sortable="custom" prop="tag" width="150" :show-overflow-tooltip="true" />
+          <el-table-column label="CIDR" sortable="custom" prop="cidr" width="200" :show-overflow-tooltip="true" />
+          <el-table-column label="可分配IP(起始)" sortable="custom" prop="poolStart" width="200" :show-overflow-tooltip="true" />
+          <el-table-column label="可分配IP(结尾)" sortable="custom" prop="poolEnd" width="200" :show-overflow-tooltip="true" />
+          <el-table-column label="标签" sortable="custom" prop="tag" :show-overflow-tooltip="true" />
           <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-button
-                v-permisaction="['admin:sysImg:edit']"
+                v-permisaction="['admin:sysNetwork:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
@@ -57,7 +66,7 @@
               >修改</el-button>
               <el-button
                 v-if="scope.row.p_id != 0"
-                v-permisaction="['admin:sysImg:remove']"
+                v-permisaction="['admin:sysNetwork:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -98,11 +107,15 @@
               </el-col>
 
               <el-col :span="24">
-                <el-form-item label="靶场名称" prop="projectName">
-                  <el-input
-                    v-model="form.projectName"
-                    :disabled="isEdit"
-                  />
+                <el-form-item label="靶场选择" prop="projectName">
+                  <el-select v-model="form.projectName" clearable placeholder="请选择" :disabled="isEdit">
+                    <el-option
+                      v-for="project in sysProjectOptions"
+                      :key="project.projectName"
+                      :label="project.projectName"
+                      :value="project.projectName"
+                    />
+                  </el-select>
                 </el-form-item>
               </el-col>
 
@@ -144,6 +157,7 @@
 
 <script>
 import { addSysNetwork, delSysNetwork, getSysNetwork, listSysNetwork, updateSysNetwork } from '@/api/admin/sys-network'
+import { listSysProject } from '@/api/admin/sys-project'
 
 export default {
   name: 'SysNetwork',
@@ -169,6 +183,7 @@ export default {
       // 类型数据字典
       typeOptions: [],
       sysNetworkList: [],
+      sysProjectOptions: [],
 
       // 关系表类型
 
@@ -250,29 +265,36 @@ export default {
     handleAdd() {
       this.reset()
       this.open = true
+      listSysProject({ pageSize: 1000 }).then(response => {
+        this.sysProjectOptions = response.data.list
+      })
       this.title = '添加SysNetwork'
       this.isEdit = false
     },
     // 多选框选中数据
-    handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.networkId)
-      this.single = selection.length !== 1
-      this.multiple = !selection.length
-    },
+    // handleSelectionChange(selection) {
+    //   this.ids = selection.map(item => item.networkId)
+    //   this.single = selection.length !== 1
+    //   this.multiple = !selection.length
+    // },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
-      const networkId =
+      if (row.networkId === undefined) {
+        this.msgError('无法更新靶场，请到相应模块更新')
+      } else {
+        const networkId =
                 row.networkId || this.ids
-      getSysNetwork(networkId).then(response => {
-        this.form = response.data
-        this.sysNetworkStructUpdate.projectName = row.projectName
-        this.sysNetworkStructUpdate.networkOldName = row.networkName
-        this.sysNetworkStructUpdate.oldTag = row.tag
-        this.open = true
-        this.title = '修改网络'
-        this.isEdit = true
-      })
+        getSysNetwork(networkId).then(response => {
+          this.form = response.data
+          this.sysNetworkStructUpdate.projectName = row.projectName
+          this.sysNetworkStructUpdate.networkOldName = row.networkName
+          this.sysNetworkStructUpdate.oldTag = row.tag
+          this.open = true
+          this.title = '修改网络'
+          this.isEdit = true
+        })
+      }
     },
     /** 提交按钮 */
     submitForm: function() {
@@ -291,6 +313,7 @@ export default {
               }
             })
           } else {
+            // console.log(this.form)
             addSysNetwork(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
@@ -306,24 +329,28 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      var Ids = (row.networkId && [row.networkId]) || this.ids
+      if (row.networkId === undefined) {
+        this.msgError('无法更新靶场，请到相应模块更新')
+      } else {
+        var Ids = (row.networkId && [row.networkId]) || this.ids
 
-      this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(function() {
-        return delSysNetwork({ 'ids': Ids })
-      }).then((response) => {
-        if (response.code === 200) {
-          this.msgSuccess(response.msg)
-          this.open = false
-          this.getList()
-        } else {
-          this.msgError(response.msg)
-        }
-      }).catch(function() {
-      })
+        this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(function() {
+          return delSysNetwork({ 'ids': Ids })
+        }).then((response) => {
+          if (response.code === 200) {
+            this.msgSuccess(response.msg)
+            this.open = false
+            this.getList()
+          } else {
+            this.msgError(response.msg)
+          }
+        }).catch(function() {
+        })
+      }
     }
   }
 }

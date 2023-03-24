@@ -1,9 +1,9 @@
 import request from '@/utils/request'
 
 // 查询SysImage列表
-export function listSysImage(query) {
+export function listSysProject(query) {
   return request({
-    url: '/api/v1/sys-image',
+    url: '/api/v1/sys-project',
     method: 'get',
     params: query
   })
@@ -32,18 +32,6 @@ export function updateSysImage(id, data) {
     url: '/api/v1/sys-image/' + id,
     method: 'put',
     data: data
-  })
-}
-
-// 上传SysImage
-export function uploadSysImage(data) {
-  return request({
-    url: '/api/v1/sys-image/upload',
-    method: 'post',
-    data: data,
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
   })
 }
 

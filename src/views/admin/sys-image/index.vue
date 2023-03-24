@@ -39,6 +39,17 @@
             >新增
             </el-button>
           </el-col>
+
+          <el-col :span="1.5">
+            <el-button
+              v-permisaction="['admin:sysImge:remove']"
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              :disabled="multiple"
+              @click="handleDelete"
+            >删除</el-button>
+          </el-col>
         </el-row>
 
         <el-table
@@ -51,17 +62,25 @@
         >
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column label="编码" sortable="custom" prop="imageId" width="80" />
-          <el-table-column label="镜像名称" sortable="custom" prop="imageName" width="250" :show-overflow-tooltip="true" />
-          <el-table-column label="OpenStack Image ID" sortable="custom" prop="openstackId" width="350" />
-          <el-table-column label="标签" sortable="custom" prop="tag" :show-overflow-tooltip="true" />
+          <el-table-column label="镜像名称" sortable="custom" prop="imageName" width="100" :show-overflow-tooltip="true" />
+          <!-- <el-table-column label="OpenStack Image ID" sortable="custom" prop="openstackId" width="350" /> -->
           <el-table-column label="类型" sortable="custom" prop="type" width="80" :show-overflow-tooltip="true" />
-          <!-- <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" width="150" /> -->
-          <!-- <el-table-column label="排序" sortable="custom" prop="roleSort" width="80" /> -->
+          <el-table-column label="标签" sortable="custom" prop="tag" :show-overflow-tooltip="true" />
 
-          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <el-table-column label="操作" align="center" width="180" class-name="small-padding fixed-width">
             <template slot-scope="scope">
+              <el-upload
+                action=""
+                :disabled="scope.row.type!=''"
+                :on-change="uploadImage"
+                :show-file-list="true"
+                :limit="1"
+                :auto-upload="false"
+              >
+                <el-button v-permisaction="['admin:sysImge:edit']" size="mini" type="text" icon="el-icon-edit" @click="beforeUpload(scope.row)">点击上传</el-button>
+              </el-upload>
               <el-button
-                v-permisaction="['admin:sysImg:edit']"
+                v-permisaction="['admin:sysImge:edit']"
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
@@ -69,7 +88,7 @@
               >修改</el-button>
               <el-button
                 v-if="scope.row.p_id != 0"
-                v-permisaction="['admin:sysImg:remove']"
+                v-permisaction="['admin:sysImge:remove']"
                 size="mini"
                 type="text"
                 icon="el-icon-delete"
@@ -109,7 +128,7 @@
               </el-col>
               <el-col :span="24">
                 <el-form-item label="类型" prop="type">
-                  <el-select v-model="form.type" placeholder="请选择" :disabled="isEdit">
+                  <el-select v-model="form.type" placeholder="请选择" :disabled="true">
                     <el-option
                       v-for="img in sysImgOptions"
                       :key="img.value"
@@ -132,7 +151,7 @@
 </template>
 
 <script>
-import { addSysImage, delSysImage, getSysImage, listSysImage, updateSysImage } from '@/api/admin/sys-image'
+import { addSysImage, delSysImage, getSysImage, listSysImage, updateSysImage, uploadSysImage } from '@/api/admin/sys-image'
 
 export default {
   name: 'SysImage',
@@ -159,6 +178,10 @@ export default {
       // 类型数据字典
       typeOptions: [],
       sysImageList: [],
+      uploadForm: {
+        imageName: '',
+        imageId: ''
+      },
 
       // 镜像类型选项
       sysImgOptions: [{
@@ -241,9 +264,34 @@ export default {
       }
       this.resetForm('form')
     },
-    getImgList: function() {
-      this.form[this.fileIndex] = this.$refs['fileChoose'].resultList[0].fullUrl
+    beforeUpload(row) {
+      this.reset()
+      this.uploadForm.imageName = row.imageName
+      this.uploadForm.imageId = row.imageId
     },
+    uploadImage(file) {
+      const formDate = new FormData()
+      const range = file.name.split('.')
+      const type = range[range.length - 1]
+      formDate.append('upload', file.raw)
+      formDate.append('type', type)
+      formDate.append('imageName', this.uploadForm.imageName)
+      formDate.append('imageId', this.uploadForm.imageId)
+      console.log(formDate)
+      console.log(file.name)
+      uploadSysImage(formDate).then(response => {
+        if (response.code === 200) {
+          this.msgSuccess(response.msg)
+          this.open = false
+          this.getList()
+        } else {
+          this.msgError(response.msg)
+        }
+      })
+    },
+    // getImgList: function() {
+    //   this.form[this.fileIndex] = this.$refs['fileChoose'].resultList[0].fullUrl
+    // },
     fileClose: function() {
       this.fileOpen = false
     },
@@ -320,14 +368,14 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       var Ids = (row.imageId && [row.imageId]) || this.ids
-
-      this.$confirm('是否确认删除名称为"' + row.imageName + '"的镜像?', '警告', {
+      var Names = (row.imageName && [row.imageName]) || this.ids.map(item => this.sysImageList.find(subItem => subItem.imageId === item).imageName)
+      this.$confirm('是否确认删除名称为"' + Names + '"的镜像?', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
         .then(function() {
-          return delSysImage({ 'ids': Ids, 'names': [row.imageName] })
+          return delSysImage({ 'ids': Ids, 'names': Names })
         }).then((response) => {
           if (response.code === 200) {
             this.msgSuccess(response.msg)
