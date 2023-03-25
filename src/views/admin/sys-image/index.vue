@@ -31,7 +31,7 @@
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button
-              v-permisaction="['admin:sysImage:add']"
+              v-permisaction="['admin:sysImge:add']"
               type="primary"
               icon="el-icon-plus"
               size="mini"
@@ -57,13 +57,11 @@
           :data="sysImageList"
           default-expand-all
           border
-          :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
           @selection-change="handleSelectionChange"
         >
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column label="编码" sortable="custom" prop="imageId" width="80" />
           <el-table-column label="镜像名称" sortable="custom" prop="imageName" width="100" :show-overflow-tooltip="true" />
-          <!-- <el-table-column label="OpenStack Image ID" sortable="custom" prop="openstackId" width="350" /> -->
           <el-table-column label="类型" sortable="custom" prop="type" width="80" :show-overflow-tooltip="true" />
           <el-table-column label="标签" sortable="custom" prop="tag" :show-overflow-tooltip="true" />
 
