@@ -113,17 +113,6 @@
                   <el-input v-model="form.imageName" placeholder="请输入镜像名称" />
                 </el-form-item>
               </el-col>
-
-              <el-col :span="24">
-                <el-form-item label="OpenStack Image ID" prop="openstackId">
-                  <el-input v-model="form.openstackId" controls-position="right" :disabled="isEditO" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="24">
-                <el-form-item label="标签" prop="tag">
-                  <el-input v-model="form.tag" placeholder="请输入标签" />
-                </el-form-item>
-              </el-col>
               <el-col :span="24">
                 <el-form-item label="类型" prop="type">
                   <el-select v-model="form.type" placeholder="请选择" :disabled="true">
@@ -136,6 +125,13 @@
                   </el-select>
                 </el-form-item>
               </el-col>
+
+              <el-col :span="24">
+                <el-form-item label="标签" prop="tag">
+                  <el-input v-model="form.tag" type="textarea" placeholder="请输入标签" />
+                </el-form-item>
+              </el-col>
+
             </el-row>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -365,6 +361,9 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
+      if (row.type === '') {
+        var isUpload = false
+      }
       var Ids = (row.imageId && [row.imageId]) || this.ids
       var Names = (row.imageName && [row.imageName]) || this.ids.map(item => this.sysImageList.find(subItem => subItem.imageId === item).imageName)
       this.$confirm('是否确认删除名称为"' + Names + '"的镜像?', '警告', {
@@ -373,7 +372,7 @@ export default {
         type: 'warning'
       })
         .then(function() {
-          return delSysImage({ 'ids': Ids, 'names': Names })
+          return delSysImage({ 'ids': Ids, 'names': Names, 'isUpload': isUpload })
         }).then((response) => {
           if (response.code === 200) {
             this.msgSuccess(response.msg)
