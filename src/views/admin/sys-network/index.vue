@@ -44,12 +44,12 @@
           v-loading="loading"
           :data="sysNetworkList"
           border
+          default-expand-all
           row-key="projectName"
           :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
         >
           <el-table-column width="55" align="center" />
           <el-table-column label="靶场名称" sortable="custom" prop="projectName" width="100" :show-overflow-tooltip="true" />
-          <!-- <el-table-column label="网络ID" sortable="custom" prop="networkId" width="100" /> -->
           <el-table-column label="网络名称" sortable="custom" prop="networkName" width="100" :show-overflow-tooltip="true" />
           <el-table-column label="CIDR" sortable="custom" prop="cidr" width="200" :show-overflow-tooltip="true" />
           <el-table-column label="可分配IP(起始)" sortable="custom" prop="poolStart" width="200" :show-overflow-tooltip="true" />

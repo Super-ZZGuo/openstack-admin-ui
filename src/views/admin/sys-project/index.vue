@@ -55,7 +55,7 @@
             <template slot-scope="scope">
               <el-popover
                 placement="right"
-                width="500"
+                width="100%"
                 trigger="click"
               >
                 <el-table
@@ -64,10 +64,10 @@
                   border
                 >
                   <el-table-column label="靶机名称" prop="rangeName" width="100" :show-overflow-tooltip="true" />
-                  <el-table-column label="状态" prop="status" width="80" />
+                  <el-table-column label="状态" prop="status" width="120" />
                   <el-table-column label="镜像" prop="image" width="80" />
-                  <el-table-column label="实例类型" prop="flavor" width="80" />
-                  <el-table-column label="标签" prop="tag" :show-overflow-tooltip="true" />
+                  <el-table-column label="IP" prop="ipadress" width="200" />
+                  <el-table-column label="实例类型" prop="flavor" width="100" />
                 </el-table>
                 <el-button
                   slot="reference"
@@ -112,13 +112,13 @@
           @pagination="getList"
         />
 
-        <!-- 添加或修改靶场对话框 -->
+        <!-- 修改靶场对话框 -->
         <el-drawer
           ref="drawer"
-          :title="title"
+          :title="title_range"
           :before-close="cancel"
           :visible.sync="open_edit"
-          direction="rtl"
+          direction="ttb"
           custom-class="demo-drawer"
           size="70%"
         >
@@ -151,13 +151,49 @@
                   :data="sysRangeList"
                   size:="mini"
                 >
-                  <el-table-column label="靶场ID" prop="rangeId" width="80" />
-                  <el-table-column label="靶场名称" prop="rangeName" width="100" :show-overflow-tooltip="true" />
+                  <el-table-column label="靶机名称" prop="rangeName" width="100" :show-overflow-tooltip="true" />
                   <el-table-column label="状态" prop="status" width="120" />
                   <el-table-column label="镜像" prop="image" width="80" />
-                  <el-table-column label="实例类型" prop="flavor" width="80" />
+                  <el-table-column label="实例类型" prop="flavor" width="90" />
+                  <el-table-column label="操作人员" prop="dept" width="80" />
+                  <el-table-column label="IP" prop="ipadress" width="200" />
+                  <el-table-column label="Console" prop="rangeConsole" width="298" :show-overflow-tooltip="true">
+                    <template slot-scope="scope">
+                      <el-link type="primary" :underline="false" :href="scope.row.rangeConsole">
+                        {{ scope.row.rangeConsole }}
+                      </el-link>
+                    </template>
+                  </el-table-column>
                   <el-table-column label="操作" align="center" width="180" class-name="small-padding fixed-width">
                     <template slot-scope="scope">
+                      <el-button
+                        v-permisaction="['admin:sysProject:remove']"
+                        size="mini"
+                        type="text"
+                        icon="el-icon-open"
+                        @click="handleUpdateRangeStart(scope.row)"
+                      >开机</el-button>
+                      <el-button
+                        v-permisaction="['admin:sysProject:remove']"
+                        size="mini"
+                        type="text"
+                        icon="el-icon-turn-off"
+                        @click="handleUpdateRangeStop(scope.row)"
+                      >关机</el-button>
+                      <el-button
+                        v-permisaction="['admin:sysProject:remove']"
+                        size="mini"
+                        type="text"
+                        icon="el-icon-refresh-left"
+                        @click="handleUpdateRangeReboot(scope.row)"
+                      >重启</el-button>
+                      <el-button
+                        v-permisaction="['admin:sysProject:remove']"
+                        size="mini"
+                        type="text"
+                        icon="el-icon-document-copy"
+                        @click="handleUpdateRangeRebuild(scope.row)"
+                      >重构</el-button>
                       <el-button
                         v-permisaction="['admin:sysProject:remove']"
                         size="mini"
@@ -165,6 +201,13 @@
                         icon="el-icon-delete"
                         @click="handleDeleteRange(scope.row)"
                       >删除</el-button>
+                      <el-button
+                        v-permisaction="['admin:sysProject:remove']"
+                        size="mini"
+                        type="text"
+                        icon="el-icon-refresh"
+                        @click="handleCheckRanges(scope.row)"
+                      >刷新</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -183,12 +226,11 @@
                 </el-button>
               </el-col>
             </el-row>
-
           </div>
         </el-drawer>
 
         <!-- 新增靶场 -->
-        <el-dialog :title="title" :visible.sync="open_add_project" width="600px" :close-on-click-modal="false">
+        <el-dialog :title="title_project_add" :visible.sync="open_add_project" width="600px" :close-on-click-modal="false">
           <el-form ref="form" :model="form" :rules="rules" label-width="150px">
             <el-row>
               <el-col :span="24">
@@ -211,7 +253,7 @@
         </el-dialog>
 
         <!-- 新增靶机_自定义 -->
-        <el-dialog :title="title" :visible.sync="open_add_range" :close-on-click-modal="false" :before-close="handleBeforeClose">
+        <el-dialog :title="title_range_add" :visible.sync="open_add_range" :close-on-click-modal="false" :before-close="handleBeforeClose">
           <el-form ref="form" :model="form" label-width="80px">
             <el-row>
               <el-col :span="24">
@@ -220,7 +262,20 @@
                 </el-form-item>
               </el-col>
             </el-row>
-
+            <el-row>
+              <el-col :span="12">
+                <el-form-item label="操作人员" prop="dept">
+                  <el-select v-model="form.dept" placeholder="请选择">
+                    <el-option
+                      v-for="dept in sysDeptOptions"
+                      :key="dept.deptName"
+                      :label="dept.deptName"
+                      :value="dept.deptName"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-row>
               <el-col :span="12">
                 <el-form-item label="镜像" prop="image">
@@ -251,6 +306,24 @@
             <el-row>
               <el-col :span="24">
                 <el-form-item label="网络" prop="network">
+                  <el-row>
+                    <el-col>
+                      <el-switch
+                        v-model="form.isFlatNetwork"
+                        inactive-text="连接外部网络"
+                      />
+                    </el-col>
+                    <el-col>
+                      <div v-if="form.isFlatNetwork==true">
+                        <el-input v-model="flatNetIp" type="input" placeholder="请输入ip地址(192.168.10.200-192.168.10.250)" class="input-with-select" style="width:590px" />
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-row>
+                    <el-col>
+                      <template>内部网络</template>
+                    </el-col>
+                  </el-row>
                   <div v-for="(item,index) in form.network" :key="index">
                     <el-row>
                       <el-col :span="22">
@@ -301,6 +374,7 @@ import { listSysRange, updateSysRange, delSysRange } from '@/api/admin/sys-proje
 import { listSysImage } from '@/api/admin/sys-image'
 import { listSysFlavor } from '@/api/admin/sys-flavor'
 import { listSysNetwork } from '@/api/admin/sys-network'
+import { getDeptList } from '@/api/admin/sys-dept'
 
 export default {
   name: 'SysProject',
@@ -321,6 +395,9 @@ export default {
       total: 0,
       // 弹出层标题
       title: '',
+      title_range: '',
+      title_project_add: '',
+      title_range_add: '',
       // 是否显示弹出层
       open_edit: false,
       open_add_project: false,
@@ -341,6 +418,7 @@ export default {
       sysImgOptions: [],
       sysFlavorOptions: [],
       sysNetworkOptions: [],
+      sysDeptOptions: [],
 
       // 靶场更新特定结构体
       sysProjectStructUpdate: {
@@ -352,6 +430,7 @@ export default {
       sysRangeStutusUpdate: {
         projectName: '',
         rangeName: '',
+        image: '',
         option: ''
       },
       // 关系表类型
@@ -368,6 +447,7 @@ export default {
         pageSize: 10000
 
       },
+      flatNetIp: '',
       // 表单参数
       form: {
       },
@@ -379,6 +459,7 @@ export default {
   },
   created() {
     this.getList()
+    this.getRangeList()
   },
   methods: {
     /** 查询参数列表 */
@@ -414,7 +495,7 @@ export default {
       }
     },
     deleteNetworkOptions(index) {
-      this.formRange.network.splice(index, 1)
+      this.form.network.splice(index, 1)
     },
     cancelRange() {
       this.open_add_range = false
@@ -439,6 +520,8 @@ export default {
         image: undefined,
         flavor: undefined,
         option: undefined,
+        deptId: undefined,
+        isFlatNetwork: undefined,
         network: []
       }
       this.resetForm('form')
@@ -462,7 +545,7 @@ export default {
     handleProjectAdd() {
       this.reset_project()
       this.open_add_project = true
-      this.title = '添加靶场'
+      this.title_project_add = '添加靶场'
     },
     handleProjectAddRange() {
       const projectId = this.form.projectId
@@ -481,11 +564,14 @@ export default {
       listSysImage({ pageSize: 1000 }).then(response => {
         this.sysImgOptions = response.data.list
       })
+      getDeptList({ pageSize: 1000 }).then(response => {
+        this.sysDeptOptions = response.data
+      })
       listSysFlavor({ pageSize: 1000 }).then(response => {
         this.sysFlavorOptions = response.data.list
       })
       this.open_add_range = true
-      this.title = '添加靶机'
+      this.title_range_add = '添加靶机'
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
@@ -498,10 +584,26 @@ export default {
       this.reset_project()
       this.queryParams.projectName = row.projectName
       this.loading_sub = true
+      this.sysRangeStutusUpdate = {
+        projectName: '',
+        rangeName: '',
+        image: '',
+        option: ''
+      }
       this.getRangeList().then(() => {
         for (var i = 0; i < this.sysRangeList.length; i++) {
           this.sysRangeStutusUpdate.projectName = row.projectName
           this.sysRangeStutusUpdate.rangeName = this.sysRangeList[i].rangeName
+          const ip = this.sysRangeList[i].ipadress.split('\\n')
+          let newstr = ''
+          for (var j = 0; j < ip.length; j++) {
+            if (j === ip.length - 1) {
+              newstr += ip[j]
+              break
+            }
+            newstr += ip[j] + '\n'
+          }
+          this.sysRangeList[i].ipadress = newstr
           updateSysRange(this.sysRangeList[i].rangeId, this.sysRangeStutusUpdate).then(response => {
             if (response.code === 200) {
               this.msgSuccess('靶机状态' + response.msg)
@@ -526,7 +628,117 @@ export default {
       this.form.projectName = row.projectName
       this.queryNetworkParams.projectName = row.projectName
       this.open_edit = true
-      this.title = '修改靶场'
+      this.title_range = '编辑靶场' + '————' + row.projectName
+    },
+    handleUpdateRangeRebuild(row) {
+      this.$confirm('此操作无法撤回！！！！！！！！！！！！是否确认操作名称为"' + row.rangeName + '"的靶机? ', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.reset_project_range()
+        this.sysRangeStutusUpdate = {
+          projectName: '',
+          rangeName: '',
+          image: '',
+          option: ''
+        }
+        this.sysRangeStutusUpdate.projectName = row.projectName
+        this.sysRangeStutusUpdate.rangeName = row.rangeName
+        this.sysRangeStutusUpdate.option = 'rebuild'
+        this.sysRangeStutusUpdate.image = row.image
+        updateSysRange(row.rangeId, this.sysRangeStutusUpdate).then(response => {
+          if (response.code === 200) {
+            this.msgSuccess('靶机状态' + response.msg)
+          } else {
+            this.msgError(response.msg)
+          }
+        })
+      }).catch(() => {
+        // 用户点击了取消按钮，不执行任何操作
+      })
+    },
+    handleUpdateRangeReboot(row) {
+      this.$confirm('此操作无法撤回！！！！！！！！！！！！是否确认操作名称为"' + row.rangeName + '"的靶机? ', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.reset_project_range()
+        this.sysRangeStutusUpdate = {
+          projectName: '',
+          rangeName: '',
+          image: '',
+          option: ''
+        }
+        this.sysRangeStutusUpdate.projectName = row.projectName
+        this.sysRangeStutusUpdate.rangeName = row.rangeName
+        this.sysRangeStutusUpdate.option = 'reboot'
+        updateSysRange(row.rangeId, this.sysRangeStutusUpdate).then(response => {
+          if (response.code === 200) {
+            this.msgSuccess('靶机状态' + response.msg)
+          } else {
+            this.msgError(response.msg)
+          }
+        })
+      }).catch(() => {
+        // 用户点击了取消按钮，不执行任何操作
+      })
+    },
+    handleUpdateRangeStart(row) {
+      this.$confirm('此操作无法撤回！！！！！！！！！！！！是否确认操作名称为"' + row.rangeName + '"的靶机? ', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.reset_project_range()
+        this.sysRangeStutusUpdate = {
+          projectName: '',
+          rangeName: '',
+          image: '',
+          option: ''
+        }
+        this.sysRangeStutusUpdate.projectName = row.projectName
+        this.sysRangeStutusUpdate.rangeName = row.rangeName
+        this.sysRangeStutusUpdate.option = 'start'
+        updateSysRange(row.rangeId, this.sysRangeStutusUpdate).then(response => {
+          if (response.code === 200) {
+            this.msgSuccess('靶机状态' + response.msg)
+          } else {
+            this.msgError(response.msg)
+          }
+        })
+      }).catch(() => {
+        // 用户点击了取消按钮，不执行任何操作
+      })
+    },
+    handleUpdateRangeStop(row) {
+      this.$confirm('此操作无法撤回！！！！！！！！！！！！是否确认操作名称为"' + row.rangeName + '"的靶机? ', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 用户点击了确认按钮，执行后续操作
+        this.reset_project_range()
+        this.sysRangeStutusUpdate = {
+          projectName: '',
+          rangeName: '',
+          image: '',
+          option: ''
+        }
+        this.sysRangeStutusUpdate.projectName = row.projectName
+        this.sysRangeStutusUpdate.rangeName = row.rangeName
+        this.sysRangeStutusUpdate.option = 'stop'
+        updateSysRange(row.rangeId, this.sysRangeStutusUpdate).then(response => {
+          if (response.code === 200) {
+            this.msgSuccess('靶机状态' + response.msg)
+          } else {
+            this.msgError(response.msg)
+          }
+        })
+      }).catch(() => {
+        // 用户点击了取消按钮，不执行任何操作
+      })
     },
     /** 提交按钮 */
     submitForm: function() {
@@ -556,40 +768,17 @@ export default {
             })
           } else if (this.form.option === '' && this.form.projectId !== undefined) {
             this.queryParams.projectName = this.form.projectName
+            if (this.form.isFlatNetwork === true) {
+              this.form.network.push({
+                networkName: 'flat-extnet',
+                ipadress: this.flatNetIp
+              })
+            }
             addSysRange(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
-                this.open_add_project = false
+                this.open_add_range = false
                 this.getRangeList()
-              } else {
-                this.msgError(response.msg)
-              }
-            })
-          }
-        }
-      })
-    },
-    submitFormRange: function() {
-      this.$refs['formRange'].validate(valid => {
-        if (valid) {
-          if (this.formRange.rangeId !== undefined) {
-            this.sysProjectStructUpdate.projectNewName = this.form.projectName
-            this.sysProjectStructUpdate.newTag = this.form.tag
-            updateSysProject(this.form.projectId, this.sysProjectStructUpdate).then(response => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open_add_project = false
-                this.getList()
-              } else {
-                this.msgError(response.msg)
-              }
-            })
-          } else {
-            addSysProject(this.formRange).then(response => {
-              if (response.code === 200) {
-                this.msgSuccess(response.msg)
-                this.open_add_project = false
-                this.getList()
               } else {
                 this.msgError(response.msg)
               }
@@ -621,12 +810,9 @@ export default {
         })
     },
     handleDeleteRange(row) {
-      console.log(row.rangeId)
       var Ids = (row.rangeId && [row.rangeId]) || this.ids
-      console.log(Ids)
       const projectName = this.queryNetworkParams.projectName
       var Names = (row.rangeName && [row.rangeName]) || this.ids.map(item => this.sysRangeList.find(subItem => subItem.rangeId === item).rangeName)
-      console.log(Names)
       this.$confirm('此操作无法撤回！！！！！！！！！！！！是否确认删除名称为"' + Names + '"的靶机? ', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -651,7 +837,13 @@ export default {
 </script>
 
 <style>
-
+  .el-form-item__label{
+    white-space:pre-line;
+    word-wrap: break-word;
+  }
+  .el-table .cell {
+    white-space: pre-line;
+  }
   .input-with-select .el-input-group__prepend {
     background-color: #fff;
   }
