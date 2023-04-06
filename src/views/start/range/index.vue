@@ -16,19 +16,37 @@
             <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
             <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
           </el-form-item>
+          <el-form-item>
+            <el-alert
+              title="当前角色可用靶场以及靶机如下，如有疑问可联系管理员。"
+              type="info"
+              :closable="false"
+            />
+          </el-form-item>
         </el-form>
+
+        <el-row :gutter="3">
+          <el-col :span="12">
+            <el-tag
+              type="primary"
+              close-transition
+            >当前角色为 ： {{ useDept }}
+            </el-tag>
+          </el-col>
+        </el-row>
 
         <el-table
           v-loading="loading"
           :data="useProjectList"
           default-expand-all
+          row-key="projectName"
           :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
           border
         >
           <el-table-column label="靶场名称" prop="projectName" width="100" :show-overflow-tooltip="true" />
-          <el-table-column label="靶机名称" prop="rangeName" width="100" :show-overflow-tooltip="true" />
-          <el-table-column label="IP" prop="ipadress" width="200" />
-          <el-table-column label="Console" prop="rangeConsole" width="298" :show-overflow-tooltip="true">
+          <el-table-column label="靶机名称" prop="rangeName" width="200" :show-overflow-tooltip="true" />
+          <el-table-column label="IP" prop="ipadress" width="300" />
+          <el-table-column label="Console" prop="rangeConsole" width="663" :show-overflow-tooltip="true">
             <template slot-scope="scope">
               <el-link type="primary" :underline="false" :href="scope.row.rangeConsole">
                 {{ scope.row.rangeConsole }}
@@ -67,6 +85,7 @@ export default {
       // 弹出层标题
       title: '',
       useProjectList: [],
+      useDept: '',
       // 查询参数
       queryParams: {
         pageIndex: 1,
@@ -76,23 +95,42 @@ export default {
     }
   },
   created() {
-    this.getList()
+    this.check()
   },
   methods: {
     /** 查询参数列表 */
-    getList() {
+    async getList() {
       this.loading = true
-      getUseProject(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
-        this.useProjectList = response.data.list
-        this.total = response.data.count
-        this.loading = false
-      }
-      )
+      const response = await getUseProject(this.addDateRange(this.queryParams, this.dateRange))
+      this.useProjectList = response.data.list
+      this.total = response.data.count
+      this.loading = false
+    },
+    check() {
+      this.getList().then(() => {
+        for (var i = 0; i < this.useProjectList.length; i++) {
+          for (var j = 0; j < this.useProjectList[i].children.length; j++) {
+            const ip = this.useProjectList[i].children[j].ipadress.split('\\n')
+            let newstr = ''
+            for (var k = 0; k < ip.length; k++) {
+              if (k === ip.length - 1) {
+                newstr += ip[k]
+                break
+              }
+              newstr += ip[k] + '\n'
+            }
+            this.useProjectList[i].children[j].ipadress = newstr
+          }
+        }
+        if (this.useDept === '') {
+          this.useDept = this.useProjectList[0].dept
+        }
+      })
     },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageIndex = 1
-      this.getList()
+      this.check()
     },
     /** 重置按钮操作 */
     resetQuery() {
