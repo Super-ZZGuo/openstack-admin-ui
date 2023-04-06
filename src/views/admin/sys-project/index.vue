@@ -120,13 +120,12 @@
           :visible.sync="open_edit"
           direction="ttb"
           custom-class="demo-drawer"
-          size="70%"
+          size="85%"
         >
           <el-row class="mb8">
             <el-col>
               <el-radio-group v-model="radio">
                 <el-radio-button label="1">自定义生成靶场</el-radio-button>
-                <el-radio-button label="2">格式化生成靶场</el-radio-button>
               </el-radio-group>
             </el-col>
           </el-row>
