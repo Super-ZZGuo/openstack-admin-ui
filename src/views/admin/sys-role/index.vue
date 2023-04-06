@@ -87,15 +87,6 @@
               @click="handleDelete"
             >删除</el-button>
           </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-permisaction="['admin:sysRole:export']"
-              type="warning"
-              icon="el-icon-download"
-              size="mini"
-              @click="handleExport"
-            >导出</el-button>
-          </el-col>
         </el-row>
 
         <el-table
@@ -139,13 +130,6 @@
                 icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
               >修改</el-button>
-              <el-button
-                v-permisaction="['admin:sysRole:update']"
-                size="mini"
-                type="text"
-                icon="el-icon-circle-check"
-                @click="handleDataScope(scope.row)"
-              >数据权限</el-button>
               <el-button
                 v-if="scope.row.roleKey!=='admin'"
                 v-permisaction="['admin:sysRole:remove']"
@@ -252,7 +236,6 @@
 import { listRole, getRole, delRole, addRole, updateRole, dataScope, changeRoleStatus } from '@/api/admin/sys-role'
 import { roleMenuTreeselect } from '@/api/admin/sys-menu'
 import { treeselect as deptTreeselect, roleDeptTreeselect } from '@/api/admin/sys-dept'
-import { formatJson } from '@/utils'
 
 export default {
   name: 'Role',
@@ -512,16 +495,6 @@ export default {
         this.getRoleMenuTreeselect(row, response.data.menuIds)
       })
     },
-    /** 分配数据权限操作 */
-    handleDataScope(row) {
-      this.reset()
-      getRole(row.roleId).then(response => {
-        this.form = response.data
-        this.openDataScope = true
-        this.title = '分配数据权限'
-        this.getRoleDeptTreeselect(row.roleId)
-      })
-    },
     /** 提交按钮 */
     submitForm: function() {
       this.$refs['form'].validate(valid => {
@@ -581,30 +554,6 @@ export default {
         this.getList()
         this.msgSuccess(response.msg)
       }).catch(function() {})
-    },
-    /** 导出按钮操作 */
-    handleExport() {
-      this.$confirm('是否确认导出所有角色数据项?', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.downloadLoading = true
-        import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['角色编号', '角色名称', '权限字符', '显示顺序', '状态', '创建时间']
-          const filterVal = ['roleId', 'roleName', 'roleKey', 'roleSort', 'status', 'createdAt']
-          const list = this.roleList
-          const data = formatJson(filterVal, list)
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: '角色管理',
-            autoWidth: true, // Optional
-            bookType: 'xlsx' // Optional
-          })
-          this.downloadLoading = false
-        })
-      })
     }
   }
 }
