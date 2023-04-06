@@ -361,8 +361,11 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
+      var isUpload = false
       if (row.type === '') {
-        var isUpload = false
+        isUpload = false
+      } else {
+        isUpload = true
       }
       var Ids = (row.imageId && [row.imageId]) || this.ids
       var Names = (row.imageName && [row.imageName]) || this.ids.map(item => this.sysImageList.find(subItem => subItem.imageId === item).imageName)
