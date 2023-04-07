@@ -125,6 +125,9 @@ export default {
         if (this.useDept === '') {
           this.useDept = this.useProjectList[0].dept
         }
+        if (this.useProjectList[0].projectName === '') {
+          this.useProjectList = []
+        }
       })
     },
     /** 搜索按钮操作 */
