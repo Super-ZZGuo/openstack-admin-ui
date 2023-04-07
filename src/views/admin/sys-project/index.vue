@@ -79,9 +79,17 @@
               </el-popover>
             </template>>
           </el-table-column>
+          <el-table-column prop="visible" label="是否启用" width="80">
+            <template slot-scope="scope">
+              <el-tag
+                :type="scope.row.status === '1' ? 'danger' : 'success'"
+                disable-transitions
+              >{{ scope.row.status=== '1' ? '关闭' : '开启' }}</el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="标签" prop="tag" :show-overflow-tooltip="true" />
 
-          <el-table-column label="操作" align="center" width="180" class-name="small-padding fixed-width">
+          <el-table-column label="操作" align="center" width="210" class-name="small-padding fixed-width">
             <template slot-scope="scope">
 
               <el-button
@@ -89,8 +97,32 @@
                 size="mini"
                 type="text"
                 icon="el-icon-edit"
+                @click="handleUpdateToStart(scope.row)"
+              >启用靶场</el-button>
+
+              <el-button
+                v-permisaction="['admin:sysImge:edit']"
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
                 @click="handleUpdate(scope.row)"
-              >编辑</el-button>
+              >编辑靶场</el-button>
+
+              <el-button
+                v-permisaction="['admin:sysImge:edit']"
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleUpdateNT(scope.row)"
+              >修改靶场</el-button>
+
+              <el-button
+                v-permisaction="['admin:sysImge:edit']"
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleUpdateToClose(scope.row)"
+              >关闭靶场</el-button>
 
               <el-button
                 v-if="scope.row.p_id != 0"
@@ -112,7 +144,7 @@
           @pagination="getList"
         />
 
-        <!-- 修改靶场对话框 -->
+        <!-- 编辑靶场对话框 -->
         <el-drawer
           ref="drawer"
           :title="title_range"
@@ -420,16 +452,18 @@ export default {
       sysDeptOptions: [],
 
       // 靶场更新特定结构体
-      sysProjectStructUpdate: {
-        projectOldName: '',
-        projectNewName: '',
-        oldTag: '',
-        newTag: ''
-      },
       sysRangeStutusUpdate: {
         projectName: '',
         rangeName: '',
         image: '',
+        option: ''
+      },
+      sysProjectUpdate: {
+        oldProjectName: '',
+        newProjectName: '',
+        oldTag: '',
+        newTag: '',
+        status: '',
         option: ''
       },
       // 关系表类型
@@ -503,6 +537,14 @@ export default {
     },
     // 表单重置
     reset_project() {
+      this.form = {
+        projectId: undefined,
+        projectName: undefined,
+        tag: undefined
+      }
+      this.resetForm('form')
+    },
+    reset_updateProject() {
       this.form = {
         projectId: undefined,
         projectName: undefined,
@@ -619,6 +661,34 @@ export default {
       this.resetForm('queryForm')
       this.queryParams.pageIndex = 1
     },
+    handleUpdateToStart(row) {
+      this.sysProjectUpdate.oldProjectName = row.projectName
+      this.sysProjectUpdate.oldTag = row.tag
+      this.sysProjectUpdate.status = row.status
+      this.sysProjectUpdate.option = 'cStatusToOpen'
+      updateSysProject(row.projectId, this.sysProjectUpdate).then(response => {
+        if (response.code === 200) {
+          this.msgSuccess(response.msg)
+          this.getList()
+        } else {
+          this.msgError(response.msg)
+        }
+      })
+    },
+    handleUpdateToClose(row) {
+      this.sysProjectUpdate.oldProjectName = row.projectName
+      this.sysProjectUpdate.oldTag = row.tag
+      this.sysProjectUpdate.status = row.status
+      this.sysProjectUpdate.option = 'cStatusToClose'
+      updateSysProject(row.projectId, this.sysProjectUpdate).then(response => {
+        if (response.code === 200) {
+          this.msgSuccess(response.msg)
+          this.getList()
+        } else {
+          this.msgError(response.msg)
+        }
+      })
+    },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset_project_range()
@@ -628,6 +698,15 @@ export default {
       this.queryNetworkParams.projectName = row.projectName
       this.open_edit = true
       this.title_range = '编辑靶场' + '————' + row.projectName
+    },
+    handleUpdateNT(row) {
+      this.reset_updateProject()
+      this.form.projectId = row.projectId
+      this.sysProjectUpdate.oldProjectName = row.projectName
+      this.sysProjectUpdate.oldTag = row.tag
+      this.sysProjectUpdate.status = row.status
+      this.open_add_project = true
+      this.title_project_add = '修改靶场'
     },
     handleUpdateRangeRebuild(row) {
       this.$confirm('此操作无法撤回！！！！！！！！！！！！是否确认操作名称为"' + row.rangeName + '"的靶机? ', '警告', {
@@ -744,9 +823,16 @@ export default {
       this.$refs['form'].validate(valid => {
         if (valid) {
           if (this.form.projectId !== undefined && this.form.option === undefined) {
-            this.sysProjectStructUpdate.projectNewName = this.form.projectName
-            this.sysProjectStructUpdate.newTag = this.form.tag
-            updateSysProject(this.form.projectId, this.sysProjectStructUpdate).then(response => {
+            if (this.form.projectName !== this.sysProjectUpdate.oldProjectName && this.form.tag !== this.sysProjectUpdate.oldTag) {
+              this.sysProjectUpdate.option = 'cTagAndName'
+            } else if (this.form.projectName === this.sysProjectUpdate.oldProjectName && this.form.tag !== this.sysProjectUpdate.oldTag) {
+              this.sysProjectUpdate.option = 'cTag'
+            } else if (this.form.projectName !== this.sysProjectUpdate.oldProjectName && this.form.tag === this.sysProjectUpdate.oldTag) {
+              this.sysProjectUpdate.option = 'cName'
+            }
+            this.sysProjectUpdate.newProjectName = this.form.projectName
+            this.sysProjectUpdate.newTag = this.form.tag
+            updateSysProject(this.form.projectId, this.sysProjectUpdate).then(response => {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open_add_project = false
@@ -767,6 +853,7 @@ export default {
             })
           } else if (this.form.option === '' && this.form.projectId !== undefined) {
             this.queryParams.projectName = this.form.projectName
+            this.form.status = 'BUILDING'
             if (this.form.isFlatNetwork === true) {
               this.form.network.push({
                 networkName: 'flat-extnet',
@@ -777,6 +864,7 @@ export default {
               if (response.code === 200) {
                 this.msgSuccess(response.msg)
                 this.open_add_range = false
+                this.sysNetworkOptions = []
                 this.getRangeList()
               } else {
                 this.msgError(response.msg)
