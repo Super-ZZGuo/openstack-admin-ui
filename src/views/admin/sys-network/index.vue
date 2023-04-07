@@ -333,13 +333,13 @@ export default {
         this.msgError('无法更新靶场，请到相应模块更新')
       } else {
         var Ids = (row.networkId && [row.networkId]) || this.ids
-
+        var Names = (row.networkName && [row.networkName]) || this.ids.map(item => this.sysNetworkList.find(subItem => subItem.imageId === item).networkName)
         this.$confirm('是否确认删除编号为"' + Ids + '"的数据项?', '警告', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         }).then(function() {
-          return delSysNetwork({ 'ids': Ids })
+          return delSysNetwork({ 'ids': Ids, 'networkNames': Names, 'projectName': row.projectName })
         }).then((response) => {
           if (response.code === 200) {
             this.msgSuccess(response.msg)
